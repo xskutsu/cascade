@@ -1,0 +1,33 @@
+{
+	"name": "cascade",
+	"version": "2.0.0",
+	"description": "",
+	"main": "dist/cascade.cjs.js",
+	"module": "dist/cascade.esm.js",
+	"types": "dist/cascade.d.ts",
+	"scripts": {
+		"clean": "rimraf dist",
+		"build:types": "dts-bundle-generator -o dist/cascade.d.ts source/index.ts",
+		"build": "pnpm run clean && node build.cjs && pnpm run build:types",
+		"watch": "pnpm run clean && node build.cjs --watch",
+		"start": "node dist/cascade.cjs.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/xskutsu/cascade.git"
+	},
+	"author": {
+		"name": "xskutsu",
+		"url": "https://github.com/xskutsu"
+	},
+	"bugs": {
+		"url": "https://github.com/xskutsu/cascade"
+	},
+	"homepage": "https://github.com/xskutsu/cascade#readme",
+	"devDependencies": {
+		"dts-bundle-generator": "^9.5.1",
+		"esbuild": "^0.25.9",
+		"rimraf": "^6.0.1",
+		"typescript": "^5.9.2"
+	}
+}
