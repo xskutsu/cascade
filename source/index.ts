@@ -106,6 +106,10 @@ export class Entity {
 	public angularVelocity: number = 0;
 	public linearDamping: number = 0.05;
 	public angularDamping: number = 0.1;
+	public minX: number = 0;
+	public minY: number = 0;
+	public maxX: number = 0;
+	public maxY: number = 0;
 	constructor(shape: IShape, positionX: number, positionY: number) {
 		this.shape = shape;
 		this.positionX = positionX;
@@ -123,5 +127,106 @@ export class Entity {
 		const angularVelocity: number = this.angularVelocity * Math.exp(-this.angularDamping * deltaTime);
 		this.angularVelocity = angularVelocity;
 		this.angle += angularVelocity * deltaTime;
+	}
+}
+
+export type CollisionProcessorFn = (entityA: Entity, entityB: Entity): void;
+
+export interface IPartitioner {
+	addEntity(entity: Entity): void;
+	query(minX: number, minY: number, maxX: number, maxY: number): Entity[];
+	queryPoint(pointX: number, pointY: number): Entity[];
+	collisions(callback: CollisionProcessorFn): void;
+	clear(): void;
+}
+
+export class HashGrid implements IPartitioner {
+	private _cellSize: number;
+	private _cells: Map<number, Entity[]> = new Map<number, Entity[]>();
+	constructor(cellSize: number) {
+		this._cellSize = cellSize;
+	}
+
+	public addEntity(entity: Entity): void {
+		const cellSize: number = this._cellSize;
+		const cells: Map<number, Entity[]> = this._cells;
+		const minX: number = entity.minX >> cellSize;
+		const minY: number = entity.minY >> cellSize;
+		const maxX: number = entity.maxX >> cellSize;
+		const maxY: number = entity.maxY >> cellSize;
+		if (minX === maxX) {
+			if (minY === maxY) {
+				const key: number = (minX << 16) | maxY;
+				const cell: Entity[] | undefined = cells.get(key);
+				if (cell === undefined) {
+					cells.set(key, [entity]);
+				} else {
+					cell.push(entity);
+				}
+			} else {
+				const keyX: number = minX << 16;
+				for (let i: number = minY; i <= maxY; i++) {
+					const key: number = keyX | i;
+					const cell: Entity[] | undefined = cells.get(key);
+					if (cell === undefined) {
+						cells.set(key, [entity]);
+					} else {
+						cell.push(entity);
+					}
+				}
+			}
+		} else if (minY === maxY) {
+			for (let i: number = minX; i <= maxX; i++) {
+				const key: number = (i << 16) | minY;
+				const cell: Entity[] | undefined = cells.get(key);
+				if (cell === undefined) {
+					cells.set(key, [entity]);
+				} else {
+					cell.push(entity);
+				}
+			}
+		} else {
+			for (let i: number = minX; i <= maxX; i++) {
+				for (let j: number = minY; j <= maxY; j++) {
+					const key: number = (i << 16) | j;
+					const cell: Entity[] | undefined = cells.get(key);
+					if (cell === undefined) {
+						cells.set(key, [entity]);
+					} else {
+						cell.push(entity);
+					}
+				}
+			}
+		}
+	}
+
+	public query(minX: number, minY: number, maxX: number, maxY: number): Entity[] {
+
+	}
+
+	public queryPoint(pointX: number, pointY: number): Entity[] {
+		const cellSize: number = this._cellSize;
+		const cell: Entity[] | undefined = this._cells.get(((pointX >> cellSize) << 16) | (pointY >> cellSize));
+		if (cell === undefined) {
+			return [];
+		} else {
+			const result: Entity[] = [];
+			let i: number = cell.length;
+			while (i-- > 0) {
+				const entity: Entity = cell[i];
+				if (pointX >= entity.minX && pointY >= entity.minY && pointX <= entity.maxX && pointY <= entity.maxY) {
+					result.push(entity);
+				}
+			}
+			return result;
+		}
+	}
+
+	public collisions(callback: CollisionProcessorFn): void {
+
+	}
+
+	public clear(): void {
+		this._cells.clear();
 	}
 }
