@@ -22,7 +22,6 @@
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
 		"exactOptionalPropertyTypes": true,
-		"noUncheckedIndexedAccess": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true
 	},
