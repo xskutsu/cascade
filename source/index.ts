@@ -7,25 +7,23 @@ export interface IShape {
 	staticFriction: number;
 	dynamicFriction: number;
 	restitution: number;
+	updateWeight(): void;
 }
 
 export class CircleShape implements IShape {
 	public radius: number;
 	public density: number;
-	public mass: number;
-	public inverseMass: number;
-	public inertia: number;
-	public inverseInertia: number;
+	public mass: number = 0;
+	public inverseMass: number = 0;
+	public inertia: number = 0;
+	public inverseInertia: number = 0;
 	public staticFriction: number = 0.5;
 	public dynamicFriction: number = 0.3;
 	public restitution: number = 0.2;
 	constructor(radius: number, density: number) {
 		this.radius = radius;
 		this.density = density;
-		this.mass = Math.PI * radius * radius * density;
-		this.inverseMass = 1 / this.mass;
-		this.inertia = 0.5 * this.mass * radius * radius;
-		this.inverseInertia = 1 / this.inertia;
+		this.updateWeight();
 	}
 
 	public updateWeight(): void {
@@ -33,6 +31,63 @@ export class CircleShape implements IShape {
 		this.inverseMass = 1 / this.mass;
 		this.inertia = 0.5 * this.mass * this.radius * this.radius;
 		this.inverseInertia = 1 / this.inertia;
+	}
+}
+
+export class PolygonShape implements IShape {
+	public vertices: number[];
+	public density: number;
+	public mass: number = 0;
+	public inverseMass: number = 0;
+	public inertia: number = 0;
+	public inverseInertia: number = 0;
+	public staticFriction: number = 0.5;
+	public dynamicFriction: number = 0.3;
+	public restitution: number = 0.2;
+	constructor(vertices: number[], density: number) {
+		this.vertices = vertices;
+		this.density = density;
+		this.updateWeight();
+	}
+
+	public updateWeight(): void {
+		const vertices: number[] = this.vertices;
+		const verticesLength: number = vertices.length;
+		let areaSquared: number = 0;
+		let areaX: number = 0;
+		let areaY: number = 0;
+		let integral: number = 0;
+		let xi = vertices[verticesLength - 2];
+		let yi = vertices[verticesLength - 1];
+		let xj = vertices[0];
+		let yj = vertices[1];
+		let cross = xi * yj - xj * yi;
+		areaSquared += cross;
+		areaX += (xi + xj) * cross;
+		areaY += (yi + yj) * cross;
+		integral += (xi * xi + xi * xj + xj * xj + yi * yi + yi * yj + yj * yj) * cross;
+		for (let i = 0; i < verticesLength - 2; i += 2) {
+			xi = vertices[i];
+			yi = vertices[i + 1];
+			xj = vertices[i + 2];
+			yj = vertices[i + 3];
+			cross = xi * yj - xj * yi;
+			areaSquared += cross;
+			areaX += (xi + xj) * cross;
+			areaY += (yi + yj) * cross;
+			integral += (xi * xi + xi * xj + xj * xj + yi * yi + yi * yj + yj * yj) * cross;
+		}
+		const signedArea: number = areaSquared * 0.5;
+		const signedAreaSextic = signedArea * 6;
+		const centerX: number = areaX / signedAreaSextic;
+		const centerY: number = areaY / signedAreaSextic;
+		const density: number = this.density;
+		const mass: number = density * signedArea;
+		this.mass = mass;
+		this.inverseMass = mass > 0 ? 1 / mass : 0;
+		const inertia = (density * integral) / 12 - mass * (centerX * centerX + centerY * centerY);
+		this.inertia = inertia;
+		this.inverseInertia = 1 / inertia;
 	}
 }
 
