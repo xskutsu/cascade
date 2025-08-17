@@ -1,3 +1,5 @@
+const MathPI: number = Math.PI;
+
 export interface IShape {
 	density: number;
 	mass: number;
@@ -27,10 +29,12 @@ export class CircleShape implements IShape {
 	}
 
 	public updateWeight(): void {
-		this.mass = Math.PI * this.radius * this.radius * this.density;
-		this.inverseMass = 1 / this.mass;
-		this.inertia = 0.5 * this.mass * this.radius * this.radius;
-		this.inverseInertia = 1 / this.inertia;
+		const radiusSquared: number = this.radius * this.radius;
+		const mass: number = MathPI * radiusSquared * this.density
+		this.inverseMass = 1 / mass;
+		const inertia: number = 0.5 * mass * radiusSquared;
+		this.inertia = inertia;
+		this.inverseInertia = 1 / inertia;
 	}
 }
 
