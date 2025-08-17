@@ -1,5 +1,3 @@
-const MathPI: number = Math.PI;
-
 export interface IShape {
 	density: number;
 	mass: number;
@@ -30,7 +28,7 @@ export class CircleShape implements IShape {
 
 	public updateWeight(): void {
 		const radiusSquared: number = this.radius * this.radius;
-		const mass: number = MathPI * radiusSquared * this.density
+		const mass: number = Math.PI * radiusSquared * this.density
 		this.inverseMass = 1 / mass;
 		const inertia: number = 0.5 * mass * radiusSquared;
 		this.inertia = inertia;
@@ -115,11 +113,15 @@ export class Entity {
 	}
 
 	public update(deltaTime: number): void {
-		this.velocityX *= Math.exp(-this.linearDamping * deltaTime);
-		this.velocityY *= Math.exp(-this.linearDamping * deltaTime);
-		this.angularVelocity *= Math.exp(-this.angularDamping * deltaTime);
-		this.positionX += this.velocityX * deltaTime;
-		this.positionY += this.velocityY * deltaTime;
-		this.angle += this.angularVelocity * deltaTime;
+		const linearDecay: number = Math.exp(-this.linearDamping * deltaTime);
+		const velocityX: number = this.velocityX * linearDecay;
+		this.velocityX = velocityX;
+		this.positionX += velocityX * deltaTime;
+		const velocityY: number = this.velocityY * linearDecay;
+		this.velocityY = velocityY;
+		this.positionY += velocityX * deltaTime;
+		const angularVelocity: number = this.angularVelocity * Math.exp(-this.angularDamping * deltaTime);
+		this.angularVelocity = angularVelocity;
+		this.angle += angularVelocity * deltaTime;
 	}
 }
